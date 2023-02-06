@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, EventEmitter, Output } from '@angular/core';
 import { DestinoViaje } from '../models/destino-viaje.model';
 
 @Component({
@@ -8,18 +8,28 @@ import { DestinoViaje } from '../models/destino-viaje.model';
 })
 export class ListaDestinosComponent implements OnInit {
 destinos: DestinoViaje[];
+@Output() onItemAdded: EventEmitter<DestinoViaje>;
+ 
   constructor(){
     this.destinos = [];
+    this.onItemAdded = new EventEmitter();
   }
   ngOnInit(){
 
   }
 
   guardar(nombre:string, url:string):boolean {
-    this.destinos.push(new DestinoViaje(nombre, url));
-    console.log(this.destinos);
+    let d = new DestinoViaje(nombre, url);
+    this.destinos.push(d);
+    this.onItemAdded.emit(d);
+    
     
     
     return false;
+  }
+
+  elegido(e:DestinoViaje) {
+    this.destinos.forEach(x => x.setSelected(false));
+    e.setSelected(true);
   }
 }
