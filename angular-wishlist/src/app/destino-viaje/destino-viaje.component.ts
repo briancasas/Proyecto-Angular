@@ -1,6 +1,8 @@
 import { parseHostBindings } from '@angular/compiler';
 import { Component, OnInit, Input, HostBinding, EventEmitter, Output } from '@angular/core';
 import { DestinoViaje } from '../models/destino-viaje.model';
+import { DestinosApiClient } from './../models/destinos-api-client.model';
+
 
 @Component({
   selector: 'app-destino-viaje',
