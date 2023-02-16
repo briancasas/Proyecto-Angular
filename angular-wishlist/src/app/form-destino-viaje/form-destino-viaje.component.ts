@@ -1,5 +1,6 @@
-import { Component, EventEmitter, Output } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { Component, EventEmitter, Output, OnInit } from '@angular/core';
+import { AbstractControl, FormBuilder, FormControl, FormGroup, ValidatorFn, Validators } from '@angular/forms';
+import { fromEvent, map, filter, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import { DestinoViaje } from '../models/destino-viaje.model';
 
 @Component({
@@ -10,24 +11,41 @@ import { DestinoViaje } from '../models/destino-viaje.model';
 export class FormDestinoViajeComponent {
   @Output() onItemAdded: EventEmitter<DestinoViaje>;
   fg: FormGroup;
+  minLongitud = 3;
+  searchResults : string[];
 
   constructor(fb: FormBuilder) {
     this.onItemAdded = new EventEmitter();
 
     this.fg = fb.group({
-      nombre: [''],
+      nombre: ['', Validators.compose([
+        Validators.required,
+        this.nombreValidatorParametrizable(this.minLongitud)
+      ])],
       url: ['']
     })
-    this.fg.valueChanges.subscribe((form: any) =>{
+    this.fg.valueChanges.subscribe((form: any) => {
       console.log('cambio el formulario: ', form);
     });
-    this.fg.controls['nombre'].valueChanges.subscribe(
-      (value: string) => {
-        console.log('nombre cambió:', value);
-      }
-    );
+   
   }
-
+  gOnInit() {
+  	let elemNombre = <HTMLInputElement>document.getElementById('nombre');
+	fromEvent(elemNombre, 'input')
+		.pipe(
+		  map((e: KeyboardEvent) => (e.target as HTMLInputElement).value),
+		  filter(text => text.length > 2),
+		  debounceTime(120),
+		  distinctUntilChanged(),
+		  switchMap(() => ajax('/assets/datos.json'))
+		).subscribe(ajaxResponse => {
+	 		this.searchResults = ajaxResponse.response
+				//filtramos client side solo para simplificar el ejemplo
+	 			.filter(function(x: string){
+	 				return x.toLowerCase().includes(elemNombre.value.toLowerCase());
+ 				});
+		});
+  }
 
 
   guardar(nombre: string, url: string): boolean {
@@ -36,4 +54,27 @@ export class FormDestinoViajeComponent {
     return false;
   }
 
+
+  nombreValidator(control: FormControl): { [s: string]: boolean } {
+    let l = control.value.toString().trim().length;
+    if (l > 0 && l < 5) {
+      return {invalidNombre: true};
+    }
+    
+    return null;
+    }
+  
+    nombreValidatorParametrizable(minLong: number): ValidatorFn {
+        return (control: AbstractControl): { [key: string]: boolean } | null => {
+        let l = control.value.toString().trim().length;
+          if (l > 0 && l < minLong) {
+                return { 'minLongNombre': true };
+            }
+            return null;
+        };
+    }
 }
+function ajax(arg0: string): any {
+  throw new Error('Function not implemented.');
+}
+

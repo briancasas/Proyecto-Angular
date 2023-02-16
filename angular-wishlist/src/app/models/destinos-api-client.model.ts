@@ -1,20 +1,50 @@
 import { DestinoViaje } from './destino-viaje.model';
+import {Injectable} from '@angular/core';
+import { Store } from '@ngrx/store';
+import {
+		NuevoDestinoAction,
+		ElegidoFavoritoAction
+	} from './destinos-viajes-state.model';
+import {AppState} from './../app.module';
 
+
+
+
+@Injectable()
 export class DestinosApiClient {
-  getElementById(id: string | null): DestinoViaje {
-    throw new Error('Method not implemented.');
+  destinos:DestinoViaje[]=[];
+
+  constructor(private store: Store<AppState>) {
+    this.store
+      .select(state => state.destinos)
+      .subscribe((data) => {
+        console.log('destinos sub store');
+        console.log(data);
+        this.destinos = data.items;
+      });
+    this.store
+      .subscribe((data) => {
+        console.log('all store');
+        console.log(data);
+      });
   }
-	destinos:DestinoViaje[];
-	constructor() {
-       this.destinos = [];
-	}
-	add(d:DestinoViaje){
-	  this.destinos.push(d);
-	}
-	getAll():DestinoViaje[]{
-	  return this.destinos;
-    }
-    getById(id:String):DestinoViaje{
-        return this.destinos.filter(function(d){return d.id.toString() == id;})[0];
-      }
+
+  add(d: DestinoViaje) {
+    // aqui incovariamos al servidor
+    this.store.dispatch(new NuevoDestinoAction(d));
+  }
+
+  getById(id: String): DestinoViaje {
+    return this.destinos.filter(function(d) { return d.id.toString() === id; })[0];
+  }
+
+    getAll(): DestinoViaje[] {
+      return this.destinos;
+  }
+    elegir(d: DestinoViaje) {
+      // aqui incovariamos al servidor
+      this.store.dispatch(new ElegidoFavoritoAction(d));
+  }
+ 
+
 }
